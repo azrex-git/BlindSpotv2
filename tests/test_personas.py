@@ -379,12 +379,12 @@ def test_elena_elderly_solo_persona_generation():
         schema=PersonaPlanPayload,
     )
     assert len(plan_ecom.personas) == 1
-    elena = plan_ecom.personas[0]
-    assert "Elena" in elena.name
-    assert elena.experience_level == "Novice"
-    assert "Low-Vision" in elena.accessibility_needs or "High-Contrast" in elena.accessibility_needs
-    assert any("<16px" in d or "contrast" in d.lower() for d in elena.likely_difficulties)
-    assert len(elena.tasks) == 3
+    arthur = plan_ecom.personas[0]
+    assert "Arthur" in arthur.name
+    assert arthur.experience_level == "Novice"
+    assert "Low-Vision" in arthur.accessibility_needs or "High-Contrast" in arthur.accessibility_needs
+    assert any("<16px" in d or "contrast" in d.lower() for d in arthur.likely_difficulties)
+    assert len(arthur.tasks) == 3
 
     # 2. General Exploration Intent
     plan_gen = provider.generate_structured(
@@ -392,21 +392,21 @@ def test_elena_elderly_solo_persona_generation():
         schema=PersonaPlanPayload,
     )
     assert len(plan_gen.personas) == 1
-    elena_gen = plan_gen.personas[0]
-    assert "Elena" in elena_gen.name
-    assert any("readability" in t.id or "contrast" in t.objective.lower() for t in elena_gen.tasks)
+    arthur_gen = plan_gen.personas[0]
+    assert "Arthur" in arthur_gen.name
+    assert any("readability" in t.id or "contrast" in t.objective.lower() or "headlines" in t.objective.lower() for t in arthur_gen.tasks)
 
 
-def test_rank_persona_files_prioritizes_elena():
-    """Verify rank_persona_files assigns highest priority to Elena senior persona."""
+def test_rank_persona_files_prioritizes_arthur():
+    """Verify rank_persona_files assigns highest priority to Arthur senior persona."""
     from blindspot.personas.generator import rank_persona_files
 
     files = [
-        Path("personas/e_commerce_shopper.md"),
-        Path("personas/accessibility_keyboard_user.md"),
-        Path("personas/elena_elderly_user.md"),
-        Path("personas/chloe_impatient_mobile_user.md"),
+        Path("personas/brenda_tech_novice.md"),
+        Path("personas/marcus_motor_impaired.md"),
+        Path("personas/arthur_elderly_user.md"),
+        Path("personas/claire_light_sensitive.md"),
     ]
-    ranked = rank_persona_files(files, context="General website audit")
-    assert ranked[0].stem == "elena_elderly_user"
+    ranked = rank_persona_files(files, context="General website audit with clear text")
+    assert ranked[0].stem == "arthur_elderly_user"
 

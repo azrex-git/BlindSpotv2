@@ -112,7 +112,7 @@ def test_setup_wizard_local_scripted(tmp_path, monkeypatch):
 
     result = runner.invoke(app, ["setup"], input=wizard_inputs)
     assert result.exit_code == 0
-    assert "BlindSpot AI Setup" in result.stdout
+    assert "BlindSpot Setup" in result.stdout
     assert "BlindSpot successfully configured" in result.stdout
     assert user_config.exists()
     content = user_config.read_text(encoding="utf-8")

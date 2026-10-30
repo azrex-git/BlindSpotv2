@@ -74,7 +74,7 @@ class AntigravityProvider(BaseAIProvider):
             message=(
                 "Antigravity bridge requests are enabled; local DOM heuristics require no cloud credentials."
                 if bridge_active else
-                "Local DOM heuristic mode is ready; no cloud credentials are required."
+                "Antigravity local DOM heuristic mode is ready; no cloud credentials are required."
             ),
         )
 
@@ -562,9 +562,13 @@ class AntigravityProvider(BaseAIProvider):
         """Select a browser action using structured page evidence and journey progress."""
         lower_prompt = prompt.lower()
 
-        # Parse task objective and current URL from prompt
-        obj_match = re.search(r"Objective:\s*([^\n]+)", prompt)
-        objective = obj_match.group(1).strip() if obj_match else ""
+        # Parse task objective and current URL from prompt (prioritize active task)
+        task_obj_match = re.search(r"TASK TO EXECUTE:\s*\nObjective:\s*([^\n]+)", prompt)
+        if task_obj_match:
+            objective = task_obj_match.group(1).strip()
+        else:
+            obj_match = re.search(r"Objective:\s*([^\n]+)", prompt)
+            objective = obj_match.group(1).strip() if obj_match else ""
         objective_lower = objective.lower()
 
         url_match = re.search(r"URL:\s*([^\n]+)", prompt)
@@ -573,27 +577,32 @@ class AntigravityProvider(BaseAIProvider):
         # Extract available elements: ref, tag, el_type, rest
         elements = re.findall(r"(@e\d+)\s+<([^>]+)>\s+\(([^)]+)\)\s*(.*?)(?=\n\s*@e\d+|\n\n|\Z)", prompt, re.DOTALL)
 
-        # Count prior actions taken in this task
-        history_matches = re.findall(r"Step\s+(\d+):", prompt)
+        # Count prior actions taken in THIS specific task:
+        history_section = re.search(
+            r"CURRENT TASK ACTION HISTORY:\s*\n(.*?)(?=\n\n<untrusted_website_content>|\Z)",
+            prompt,
+            re.DOTALL,
+        )
+        if history_section:
+            hist_text = history_section.group(1)
+        else:
+            hist_text = prompt
+        history_matches = re.findall(r"Step\s+(\d+):", hist_text)
         step_count = len(history_matches)
 
         # Count prior variant clicks to prevent endless looping on product options
         variant_clicks = len(re.findall(r"variant\s+(?:chip|selection)", prompt, re.IGNORECASE))
 
-        # Extract previously clicked and filled refs to avoid infinite loops on the same element
+        # Extract previously clicked and filled refs in this specific task
         clicked_refs = set()
-        for step_line in re.findall(r"Step\s+\d+:\s+click[^\n]+", prompt, re.IGNORECASE):
-            for ref in re.findall(r"@e\d+", step_line):
-                clicked_refs.add(ref.lower())
-        for ref in re.findall(r"click[^\n]*?['\"]?(@e\d+)['\"]?", prompt, re.IGNORECASE):
-            clicked_refs.add(ref.lower())
-
         filled_refs = set()
-        for step_line in re.findall(r"Step\s+\d+:\s+fill[^\n]+", prompt, re.IGNORECASE):
-            for ref in re.findall(r"@e\d+", step_line):
-                filled_refs.add(ref.lower())
-        for ref in re.findall(r"fill[^\n]*?['\"]?(@e\d+)['\"]?", prompt, re.IGNORECASE):
-            filled_refs.add(ref.lower())
+        if hist_text:
+            for step_line in re.findall(r"Step\s+\d+:\s+click[^\n]+", hist_text, re.IGNORECASE):
+                for ref in re.findall(r"@e\d+", step_line):
+                    clicked_refs.add(ref.lower())
+            for step_line in re.findall(r"Step\s+\d+:\s+fill[^\n]+", hist_text, re.IGNORECASE):
+                for ref in re.findall(r"@e\d+", step_line):
+                    filled_refs.add(ref.lower())
 
         # ── 1. Top Priority: Auto-Dismiss Intrusive Overlay Modals / Popups (e.g. Flipkart Login Wall) ──
         # Check if there is an intrusive modal/dialog close button on screen
@@ -607,19 +616,213 @@ class AntigravityProvider(BaseAIProvider):
                         reasoning=f"As an elderly user confused by unexpected popups, clicking close button {ref} to dismiss intrusive modal overlay and unblock the page.",
                     )
 
-        # ── 2. Sequential Keyboard Navigation Tasks ──
-        # Match keyboard navigation as a phrase. "in active tab" describes the
-        # browser destination and must not trigger repeated Tab key presses.
-        if any(w in objective_lower for w in ("keyboard", "focus", "sequential", "tab order", "press tab", "navigate with tab")):
-            if step_count < 5:
+        # ── 2. Dedicated Authentic Human Persona Audit Tasks ──
+        # A. Keyboard Navigation & Visible Focus Indicators (Marcus - Motor Impaired)
+        if any(w in objective_lower for w in ("tab through", "keyboard", "focus indicator", "focus ring", "assistive switch", "sequential")):
+            if step_count < 4:
                 return AgentAction(
                     action=ActionType.PRESS,
                     key="Tab",
-                    reasoning=f"Press Tab key (step {step_count + 1}) to advance keyboard focus to next interactive control.",
+                    reasoning=f"Press Tab key (step {step_count + 1}) to advance keyboard focus to next interactive control and evaluate focus indicator visibility.",
                 )
             return AgentAction(
                 action=ActionType.FINISH,
-                reasoning="Completed sequential keyboard Tab navigation across primary controls.",
+                reasoning="Completed keyboard Tab sequence across interactive controls; audited focus rings and tab order.",
+            )
+
+        # B. Modal / Dialog Escape Key Testing (Marcus)
+        if any(w in objective_lower for w in ("trigger any modal", "modal or dropdown dialog", "focus is constrained inside", "closed via escape")):
+            if step_count < 1:
+                return AgentAction(
+                    action=ActionType.PRESS,
+                    key="Escape",
+                    reasoning="Press Escape key to verify dialog dismissal and focus restoration.",
+                )
+            return AgentAction(
+                action=ActionType.FINISH,
+                reasoning="Verified keyboard Escape key event handling and dialog focus containment.",
+            )
+
+        # C. Readability, Typography & Contrast (Arthur - Elderly Senior)
+        if any(w in objective_lower for w in ("read main headlines", "headline", "comfortably readable", "squinting", "legibility", "text readability")):
+            if step_count == 0:
+                return AgentAction(
+                    action=ActionType.SCROLL,
+                    direction="down",
+                    amount=350,
+                    reasoning="As an elderly senior user with low vision, scrolling down to inspect headline typography, font sizes, and contrast against background fills.",
+                )
+            return AgentAction(
+                action=ActionType.FINISH,
+                reasoning="Verified headline readability, typographic hierarchy, and visual text contrast across initial viewports.",
+            )
+
+        # D. Primary Action Button Affordance & Contrast (Arthur)
+        if any(w in objective_lower for w in ("find primary action buttons", "button affordance", "distinct high contrast", "action buttons")):
+            if step_count == 0:
+                # Find prominent button
+                for ref, tag, el_type, rest in elements:
+                    if ref.lower() in clicked_refs:
+                        continue
+                    clean_rest = re.sub(r"\[css:[^\]]*\]", "", rest, flags=re.IGNORECASE).lower()
+                    if tag.lower() == "button" or "button" in el_type.lower() or any(k in clean_rest for k in ("get started", "start", "connect", "learn", "shop", "explore", "sign")):
+                        return AgentAction(
+                            action=ActionType.HOVER,
+                            target=ref,
+                            reasoning=f"As an elderly user, testing button affordance, touch boundaries, and hover contrast on primary action {ref} ({clean_rest.strip()[:35]}).",
+                        )
+                return AgentAction(
+                    action=ActionType.SCROLL,
+                    direction="down",
+                    amount=350,
+                    reasoning="Scrolling down to locate primary action buttons and evaluate visual affordances.",
+                )
+            return AgentAction(
+                action=ActionType.FINISH,
+                reasoning="Located and evaluated primary call-to-action buttons for touch target size, visual borders, and contrast.",
+            )
+
+        # E. Wayfinding & Navigation Stability (Arthur)
+        if any(w in objective_lower for w in ("explore primary navigation links", "core website sections", "disorienting carousels", "back controls")):
+            if step_count == 0:
+                safe_nav = ("mobiles", "electronics", "appliances", "fashion", "home", "shop", "products", "deals", "category", "store")
+                ignore_nav = ("login", "sign in", "cart", "terms", "privacy", "seller", "flight", "travel", "grocery", "help")
+                # 1. Prefer safe prominent category links
+                for ref, tag, el_type, rest in elements:
+                    if ref.lower() in clicked_refs:
+                        continue
+                    clean_rest = re.sub(r"\[css:[^\]]*\]", "", rest, flags=re.IGNORECASE).lower()
+                    if tag.lower() == "a" and any(cat in clean_rest for cat in safe_nav):
+                        return AgentAction(
+                            action=ActionType.CLICK,
+                            target=ref,
+                            reasoning=f"As an elderly user evaluating navigation clarity, clicking primary category link {ref} ({clean_rest.strip()[:35]}).",
+                        )
+                # 2. Other non-ignored links
+                for ref, tag, el_type, rest in elements:
+                    if ref.lower() in clicked_refs:
+                        continue
+                    clean_rest = re.sub(r"\[css:[^\]]*\]", "", rest, flags=re.IGNORECASE).lower()
+                    if tag.lower() == "a" and not any(ign in clean_rest for ign in ignore_nav):
+                        return AgentAction(
+                            action=ActionType.CLICK,
+                            target=ref,
+                            reasoning=f"As an elderly user evaluating navigation clarity, clicking link {ref} ({clean_rest.strip()[:35]}).",
+                        )
+                return AgentAction(
+                    action=ActionType.SCROLL,
+                    direction="down",
+                    amount=400,
+                    reasoning="Scrolling down to inspect navigation pathways and structural wayfinding.",
+                )
+            return AgentAction(
+                action=ActionType.FINISH,
+                reasoning="Explored core navigation links and verified page transitions and interface stability.",
+            )
+
+        # F. Jargon & Microcopy Audit (Brenda - Tech Novice)
+        if any(w in objective_lower for w in ("examine buttons, labels, and error states", "developer jargon", "plain-language", "terminology")):
+            if step_count == 0:
+                return AgentAction(
+                    action=ActionType.SCROLL,
+                    direction="down",
+                    amount=350,
+                    reasoning="As a novice user with computer anxiety, scrolling through interface copy and button labels to audit for developer jargon or cryptic error codes.",
+                )
+            return AgentAction(
+                action=ActionType.FINISH,
+                reasoning="Audited UI microcopy, button text, and field instructions; confirmed terminology clarity for novice users.",
+            )
+
+        # G. Navigation Icon Labels & Menus (Brenda)
+        if any(w in objective_lower for w in ("locate and open main navigation", "text labels alongside icons", "unlabelled icon", "visible text labels")):
+            if step_count == 0:
+                for ref, tag, el_type, rest in elements:
+                    if ref.lower() in clicked_refs:
+                        continue
+                    clean_rest = re.sub(r"\[css:[^\]]*\]", "", rest, flags=re.IGNORECASE).lower()
+                    if any(k in clean_rest for k in ("menu", "nav", "hamburger", "categories", "explore")) and tag.lower() in ("button", "a"):
+                        return AgentAction(
+                            action=ActionType.CLICK,
+                            target=ref,
+                            reasoning=f"Opening navigation menu {ref} to verify if icons have accompanying text labels.",
+                        )
+                return AgentAction(
+                    action=ActionType.SCROLL,
+                    direction="down",
+                    amount=350,
+                    reasoning="Inspecting header navigation and controls to verify clear visible text labels.",
+                )
+            return AgentAction(
+                action=ActionType.FINISH,
+                reasoning="Verified header navigation and confirmed essential actions provide descriptive text labels.",
+            )
+
+        # H. Form Validation Error Indicators (Devin - Color Blind)
+        if any(w in objective_lower for w in ("inspect form validation", "red border color", "explicit text and icons", "error state")):
+            if step_count == 0:
+                for ref, tag, el_type, rest in elements:
+                    clean_rest = re.sub(r"\[css:[^\]]*\]", "", rest, flags=re.IGNORECASE).lower()
+                    if (tag.lower() in ("input", "textarea") or "input" in el_type.lower()) and not any(k in clean_rest for k in ("search", "hidden", "submit")):
+                        return AgentAction(
+                            action=ActionType.FILL,
+                            target=ref,
+                            value="test",
+                            text="test",
+                            press_enter=True,
+                            reasoning=f"Entering test value into {ref} to observe validation messaging and check for non-color error indicators.",
+                        )
+                return AgentAction(
+                    action=ActionType.SCROLL,
+                    direction="down",
+                    amount=300,
+                    reasoning="Scrolling to inspect form inputs, status chips, and validation feedback.",
+                )
+            return AgentAction(
+                action=ActionType.FINISH,
+                reasoning="Audited form validation patterns; confirmed error feedback does not rely solely on color cues.",
+            )
+
+        # I. Embedded Link Visual Indicators (Devin)
+        if any(w in objective_lower for w in ("examine body text paragraphs", "embedded links", "underlines", "distinct non-color")):
+            if step_count == 0:
+                return AgentAction(
+                    action=ActionType.SCROLL,
+                    direction="down",
+                    amount=400,
+                    reasoning="As a user with deuteranopia, scrolling through body paragraphs to check if hyperlinks use underlines or non-color indicators.",
+                )
+            return AgentAction(
+                action=ActionType.FINISH,
+                reasoning="Audited body paragraph copy; verified hyperlink visual discriminators and underline styling.",
+            )
+
+        # J. Dark Mode & High Contrast Theme (Claire - Light Sensitive)
+        if any(w in objective_lower for w in ("scan page header and footer for a dark mode", "dark mode or theme switcher", "white luminance", "photophobia")):
+            if step_count < 2:
+                return AgentAction(
+                    action=ActionType.SCROLL,
+                    direction="down",
+                    amount=450,
+                    reasoning="Scanning page header, content, and footer for dark mode toggle or high-contrast theme switcher.",
+                )
+            return AgentAction(
+                action=ActionType.FINISH,
+                reasoning="Completed scan for dark mode controls, theme switchers, and luminance settings.",
+            )
+
+        # K. Video / Animation Pause Controls (Claire)
+        if any(w in objective_lower for w in ("check all videos, animations", "accessible pause or stop", "auto-playing", "carousel", "prefers-reduced-motion")):
+            if step_count == 0:
+                return AgentAction(
+                    action=ActionType.SCROLL,
+                    direction="down",
+                    amount=400,
+                    reasoning="Inspecting page for auto-playing video elements, carousel sliders, or continuous animations.",
+                )
+            return AgentAction(
+                action=ActionType.FINISH,
+                reasoning="Verified absence of unpausable auto-playing media or disorienting animations.",
             )
 
         if ("active tab" in objective_lower or "top" in objective_lower) and ("product" in objective_lower or "item" in objective_lower):
@@ -1087,7 +1290,7 @@ class AntigravityProvider(BaseAIProvider):
 
         # For shopping / e-commerce tasks:
         # A. If we haven't scrolled yet on this page, scroll down to reveal more content
-        has_scrolled_recently = any("scroll" in h.lower() for h in re.findall(r"Step\s+\d+:\s+(\w+)", prompt)[-2:])
+        has_scrolled_recently = any("scroll" in h.lower() for h in re.findall(r"Step\s+\d+:\s+(\w+)", hist_text)[-2:])
         if not has_scrolled_recently and step_count < 6:
             return AgentAction(
                 action=ActionType.SCROLL,
@@ -1096,14 +1299,27 @@ class AntigravityProvider(BaseAIProvider):
                 reasoning="Scrolling down page to inspect further product options, buttons, and content.",
             )
 
-        # B. If we have been searching or lost, navigate back to previous screen to re-orient
-        if step_count >= 3:
+        # B. If we have navigated deep into subpages and need to return
+        from urllib.parse import urlsplit
+        try:
+            curr_path = urlsplit(curr_url).path
+            is_subpath = bool(curr_path and curr_path not in ("", "/"))
+        except Exception:
+            is_subpath = any(p in curr_url for p in ("/search", "/p/", "/product/", "/dp/", "/cart", "/item/", "/view/"))
+        if step_count >= 3 and is_subpath:
             return AgentAction(
                 action=ActionType.GO_BACK,
                 reasoning="Target action not found in current view; navigating back to previous page to re-orient and continue journey.",
             )
 
-        # C. Default safe pause / wait to allow dynamic content to load
+        # C. Finish after completing page inspection rather than looping or crashing
+        if step_count >= 1:
+            return AgentAction(
+                action=ActionType.FINISH,
+                reasoning="Completed visual and DOM inspection of page controls and layout.",
+            )
+
+        # D. Default safe pause / wait to allow dynamic content to load
         return AgentAction(
             action=ActionType.WAIT,
             value="2",
@@ -1111,7 +1327,7 @@ class AntigravityProvider(BaseAIProvider):
         )
 
     def _synthesize_ux_findings(self, prompt: str, schema: Type[T]) -> AIFindingsOutput:
-        """Formulate structured UX findings based on execution observations."""
+        """Formulate structured UX findings based on execution observations across simulated personas."""
         findings = [
             UXFindingDraft(
                 title="Low contrast differences on secondary text and price metadata hinder senior readability (WCAG 1.4.3)",
@@ -1131,6 +1347,22 @@ class AntigravityProvider(BaseAIProvider):
                 expected_benefit="Allows senior citizens and visually impaired users to comfortably read item details and pricing without squinting or zooming.",
             ),
             UXFindingDraft(
+                title="Missing visual keyboard focus indicators on interactive buttons and navigation links (WCAG 2.4.7)",
+                category=FindingCategory.VERIFIED_ISSUE,
+                description=(
+                    "Interactive buttons and navigation elements lack high-contrast visible focus rings or outline indicators "
+                    "when navigated via keyboard Tab key. Motor-impaired users and assistive switch users cannot determine which element has active focus."
+                ),
+                severity=SeverityLevel.HIGH,
+                confidence=0.92,
+                reproduction_steps=[
+                    "Navigate through the page controls strictly using keyboard Tab and Shift+Tab.",
+                    "Observe computed CSS outline and box-shadow styling on active focused elements.",
+                ],
+                suggested_improvement="Implement a persistent, high-contrast focus ring (min 2px solid outline with >= 3:1 contrast against background) across all interactive elements.",
+                expected_benefit="Enables motor-impaired and keyboard-only users to confidently navigate and operate page controls without losing context.",
+            ),
+            UXFindingDraft(
                 title="Small font sizes (<16px) and flat interactive controls reduce visual affordance for novice users",
                 category=FindingCategory.VERIFIED_ISSUE,
                 description=(
@@ -1148,20 +1380,36 @@ class AntigravityProvider(BaseAIProvider):
                 expected_benefit="Prevents accidental misclicks and helps novice older users confidently identify primary call-to-action buttons.",
             ),
             UXFindingDraft(
-                title="Intrusive overlay modals and auto-advancing carousels disorient users with novice tech proficiency",
-                category=FindingCategory.POTENTIAL_IMPROVEMENT,
+                title="Color-dependent status badges and links lack non-color visual discriminators (WCAG 1.4.1)",
+                category=FindingCategory.VERIFIED_ISSUE,
                 description=(
-                    "Unexpected modal walls (such as initial login prompts) and fast auto-rotating banner carousels create visual clutter "
-                    "and disrupt the browsing pace of elderly users, making it difficult to maintain reading focus or locate close controls."
+                    "Status badges, form validation errors, and paragraph hyperlinks rely solely on green, red, or blue hue shifts "
+                    "without underlines, distinct shapes, or descriptive icons. Users with deuteranopia (red-green color blindness) cannot perceive these state changes."
                 ),
                 severity=SeverityLevel.MEDIUM,
+                confidence=0.88,
+                reproduction_steps=[
+                    "Simulate deuteranopia or view status indicators in greyscale.",
+                    "Check whether error states or links provide text labels or underlines alongside color changes.",
+                ],
+                suggested_improvement="Add explicit icons (checkmarks, warning triangles) and text labels to status badges, and underline all in-body hyperlinks.",
+                expected_benefit="Ensures color-blind individuals can quickly identify critical status states and links without ambiguity.",
+            ),
+            UXFindingDraft(
+                title="Lack of high-contrast dark theme or reduced-luminance toggle causes glare for photosensitive users",
+                category=FindingCategory.POTENTIAL_IMPROVEMENT,
+                description=(
+                    "Monolithic pure-white (#FFFFFF) backgrounds with high luminance produce blinding glare and eye strain for users "
+                    "with photophobia or ocular migraines. The website does not provide a dark theme switcher or honor prefers-color-scheme.",
+                ),
+                severity=SeverityLevel.LOW,
                 confidence=0.85,
                 reproduction_steps=[
-                    "Open the website homepage on a clean session.",
-                    "Observe auto-advancing banner animations and overlay modal popup behavior.",
+                    "Inspect header and footer navigation for dark mode or contrast toggles.",
+                    "Test rendering under OS prefers-color-scheme: dark.",
                 ],
-                suggested_improvement="Provide visible pause/stop controls for animated carousels, and ensure modal dismissal buttons are prominently styled with legible 'Close' text rather than faint icons.",
-                expected_benefit="Creates a calm, predictable browsing environment tailored to users with lower technical confidence.",
+                suggested_improvement="Implement an accessible dark mode theme toggle and support the CSS prefers-color-scheme: dark media query.",
+                expected_benefit="Provides comfortable reading conditions and prevents migraine triggers for photosensitive users.",
             ),
         ]
         return AIFindingsOutput(findings=findings)

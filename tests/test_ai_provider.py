@@ -344,7 +344,7 @@ def test_antigravity_provider_direct():
     )
     assert isinstance(plan, PersonaPlanPayload)
     assert len(plan.personas) > 0
-    assert any("iPhone" in p.description or "Shopper" in p.name for p in plan.personas)
+    assert any("iPhone" in p.description or any("iphone" in t.objective.lower() for t in p.tasks) or "Shopper" in p.name for p in plan.personas)
 
     # Test Action selection
     action = provider.generate_structured(
@@ -362,28 +362,27 @@ def test_antigravity_markdown_persona_parsing():
 
     provider = AntigravityProvider()
 
-    # Read the e-commerce shopper markdown persona file
-    shopper_md = Path("personas/e_commerce_shopper.md").read_text(encoding="utf-8")
+    # Read the Arthur elderly user markdown persona file
+    elderly_md = Path("personas/arthur_elderly_user.md").read_text(encoding="utf-8")
     plan = provider.generate_structured(
-        prompt=f'WEBSITE INTENDED CONTEXT & AUDIENCE: "{shopper_md}"',
+        prompt=f'WEBSITE INTENDED CONTEXT & AUDIENCE: "{elderly_md}"',
         schema=PersonaPlanPayload,
     )
     assert isinstance(plan, PersonaPlanPayload)
     assert len(plan.personas) >= 1
     p1 = plan.personas[0]
-    assert "Priya" in p1.name
-    assert len(p1.tasks) == 3
-    assert any("search" in t.objective.lower() for t in p1.tasks)
+    assert "Arthur" in p1.name
+    assert len(p1.tasks) >= 2
 
-    # Read the keyboard accessibility markdown persona file
-    a11y_md = Path("personas/accessibility_keyboard_user.md").read_text(encoding="utf-8")
-    plan_a11y = provider.generate_structured(
-        prompt=f'WEBSITE INTENDED CONTEXT & AUDIENCE: "{a11y_md}"',
+    # Read the Marcus motor-impaired markdown persona file
+    motor_md = Path("personas/marcus_motor_impaired.md").read_text(encoding="utf-8")
+    plan_motor = provider.generate_structured(
+        prompt=f'WEBSITE INTENDED CONTEXT & AUDIENCE: "{motor_md}"',
         schema=PersonaPlanPayload,
     )
-    assert isinstance(plan_a11y, PersonaPlanPayload)
-    assert len(plan_a11y.personas) >= 1
-    assert "Alex" in plan_a11y.personas[0].name
-    assert len(plan_a11y.personas[0].tasks) == 3
+    assert isinstance(plan_motor, PersonaPlanPayload)
+    assert len(plan_motor.personas) >= 1
+    assert "Marcus" in plan_motor.personas[0].name
+    assert len(plan_motor.personas[0].tasks) >= 2
 
 

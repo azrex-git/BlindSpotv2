@@ -192,11 +192,11 @@ def test_dynamic_persona_generation_inherits_user_context(tmp_path):
         num_personas=1,
     )
     assert len(plan.personas) == 1
-    elena = plan.personas[0]
-    assert "Elena" in elena.name
-    # Elena's tasks must be customized to the target product
-    assert any("iphone 16" in t.objective.lower() for t in elena.tasks)
-    assert any("cart" in t.objective.lower() for t in elena.tasks)
+    arthur = plan.personas[0]
+    assert "Arthur" in arthur.name
+    # Arthur's tasks must be customized to the target product
+    assert any("iphone 16" in t.objective.lower() for t in arthur.tasks)
+    assert any("cart" in t.objective.lower() for t in arthur.tasks)
 
 
 def test_auth_barrier_requests_prompt_user():
