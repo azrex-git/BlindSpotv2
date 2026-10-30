@@ -47,7 +47,7 @@ def build_agent_system_prompt(skill: Optional[str] = None) -> str:
     Dynamically incorporates specialized directives from the active Agent Skill if present.
     """
     skill_directives = ""
-    target_skill = skill or "blindspot-ux-audit"
+    target_skill = skill or "persona-elderly-user"
     try:
         from blindspot.skills.registry import SkillRegistry
         reg = SkillRegistry()

@@ -21,10 +21,11 @@ def test_bundled_skills_exist():
     skills = list_bundled_skills()
     skill_names = {s.name for s in skills}
     expected = {
-        "blindspot-ux-audit",
-        "blindspot-verify-fix",
-        "blindspot-wcag-audit",
-        "blindspot-persona-designer",
+        "persona-elderly-user",
+        "persona-tech-novice",
+        "persona-motor-impaired",
+        "persona-color-blind",
+        "persona-light-sensitive",
     }
     assert expected.issubset(skill_names)
 
@@ -120,10 +121,11 @@ def test_cli_skill_list():
     """Verify 'blindspot skill list' outputs table of bundled skills."""
     result = runner.invoke(app, ["skill", "list"])
     assert result.exit_code == 0
-    assert "blindspot-ux-audit" in result.output
-    assert "blindspot-verify-fix" in result.output
-    assert "blindspot-wcag-audit" in result.output
-    assert "blindspot-persona-designer" in result.output
+    assert "persona-elderly-user" in result.output
+    assert "persona-tech-novice" in result.output
+    assert "persona-motor-impaired" in result.output
+    assert "persona-color-blind" in result.output
+    assert "persona-light-sensitive" in result.output
 
 
 def test_cli_skill_validate():
@@ -131,7 +133,7 @@ def test_cli_skill_validate():
     result = runner.invoke(app, ["skill", "validate"])
     assert result.exit_code == 0
     assert "[PASS]" in result.output
-    assert "blindspot-ux-audit" in result.output
+    assert "persona-elderly-user" in result.output
 
 
 def test_cli_skill_validate_invalid_path(tmp_path: Path):
@@ -145,8 +147,8 @@ def test_cli_skill_install(tmp_path: Path):
     """Verify 'blindspot skill install' exports to specified destination."""
     result = runner.invoke(app, ["skill", "install", "--dest", str(tmp_path)])
     assert result.exit_code == 0
-    assert (tmp_path / ".agents" / "skills" / "blindspot-ux-audit" / "SKILL.md").is_file()
-    assert (tmp_path / ".github" / "skills" / "blindspot-ux-audit" / "SKILL.md").is_file()
+    assert (tmp_path / ".agents" / "skills" / "persona-elderly-user" / "SKILL.md").is_file()
+    assert (tmp_path / ".github" / "skills" / "persona-elderly-user" / "SKILL.md").is_file()
 
 
 def test_skill_registry_progressive_disclosure():
@@ -155,18 +157,18 @@ def test_skill_registry_progressive_disclosure():
 
     reg = SkillRegistry()
     summaries = reg.list_summaries()
-    assert len(summaries) >= 6
+    assert len(summaries) >= 5
 
     # Tier 1: summaries contain light metadata
-    wcag_sum = next(s for s in summaries if s.name == "blindspot-wcag-audit")
-    assert "accessibility" in wcag_sum.keywords
-    assert wcag_sum.version == "1.0.0"
+    motor_sum = next(s for s in summaries if s.name == "persona-motor-impaired")
+    assert "keyboard" in motor_sum.keywords
+    assert motor_sum.version == "1.0.0"
 
     # Tier 2: Activation on demand with alias resolution
-    wcag_skill = reg.get_skill("wcag")
-    assert wcag_skill is not None
-    assert wcag_skill.name == "blindspot-wcag-audit"
-    assert "WCAG 2.2" in wcag_skill.body
+    motor_skill = reg.get_skill("motor")
+    assert motor_skill is not None
+    assert motor_skill.name == "persona-motor-impaired"
+    assert "Keyboard" in motor_skill.body
 
     # Tier 2: Unknown skill returns None
     assert reg.get_skill("nonexistent-skill") is None
@@ -178,15 +180,15 @@ def test_skill_registry_slash_commands():
 
     reg = SkillRegistry()
 
-    skill, rest = reg.try_parse_slash_command("/wcag check color contrast")
+    skill, rest = reg.try_parse_slash_command("/elderly check font size")
     assert skill is not None
-    assert skill.name == "blindspot-wcag-audit"
-    assert rest == "check color contrast"
+    assert skill.name == "persona-elderly-user"
+    assert rest == "check font size"
 
-    skill, rest = reg.try_parse_slash_command("/ecommerce test cart checkout")
+    skill, rest = reg.try_parse_slash_command("/novice test form submission")
     assert skill is not None
-    assert skill.name == "blindspot-ecommerce-audit"
-    assert rest == "test cart checkout"
+    assert skill.name == "persona-tech-novice"
+    assert rest == "test form submission"
 
     skill, rest = reg.try_parse_slash_command("regular user query without slash")
     assert skill is None
@@ -199,13 +201,13 @@ def test_skill_registry_find_matches():
 
     reg = SkillRegistry()
 
-    matches = reg.find_matches("touch target sizes mobile viewport")
+    matches = reg.find_matches("keyboard focus switch tremors")
     assert len(matches) > 0
-    assert matches[0][0].name == "blindspot-mobile-audit"
+    assert matches[0][0].name == "persona-motor-impaired"
 
-    ecom_matches = reg.find_matches("checkout funnel shopping cart")
-    assert len(ecom_matches) > 0
-    assert ecom_matches[0][0].name == "blindspot-ecommerce-audit"
+    color_matches = reg.find_matches("color blind deuteranopia contrast")
+    assert len(color_matches) > 0
+    assert color_matches[0][0].name == "persona-color-blind"
 
 
 def test_skill_activator_injection_modes():
@@ -215,31 +217,30 @@ def test_skill_activator_injection_modes():
 
     reg = SkillRegistry()
     activator = SkillActivator(reg)
-    skill = reg.get_skill("ecommerce")
+    skill = reg.get_skill("elderly")
     assert skill is not None
 
     user_injection = activator.format_for_injection(
         skill, mode=SkillInjectionMode.USER_MESSAGE, user_request="Audit checkout page"
     )
-    assert "ACTIVATED AGENT SKILL: blindspot-ecommerce-audit" in user_injection
+    assert "ACTIVATED AGENT SKILL: persona-elderly-user" in user_injection
     assert "Audit checkout page" in user_injection
 
     sys_injection = activator.format_for_injection(
         skill, mode=SkillInjectionMode.SYSTEM_PROMPT
     )
-    assert "[Active Specialized Skill: blindspot-ecommerce-audit]" in sys_injection
+    assert "[Active Specialized Skill: persona-elderly-user]" in sys_injection
 
 
 def test_cli_skill_show_and_match():
     """Verify 'blindspot skill show' and 'blindspot skill match' CLI commands."""
-    show_res = runner.invoke(app, ["skill", "show", "mobile"])
+    show_res = runner.invoke(app, ["skill", "show", "elderly"])
     assert show_res.exit_code == 0
-    assert "blindspot-mobile-audit" in show_res.output
-    assert "Touch Targets" in show_res.output
+    assert "persona-elderly-user" in show_res.output
 
-    match_res = runner.invoke(app, ["skill", "match", "accessibility keyboard navigation"])
+    match_res = runner.invoke(app, ["skill", "match", "keyboard focus navigation"])
     assert match_res.exit_code == 0
-    assert "blindspot-wcag-audit" in match_res.output
+    assert "persona-motor-impaired" in match_res.output
 
 
 def test_mcp_skill_tools():
@@ -247,14 +248,14 @@ def test_mcp_skill_tools():
     from blindspot.mcp.tools import tool_get_skill, tool_list_skills
 
     list_res = tool_list_skills()
-    assert list_res["skills_count"] >= 6
+    assert list_res["skills_count"] >= 5
     skill_names = [s["name"] for s in list_res["skills"]]
-    assert "blindspot-ecommerce-audit" in skill_names
-    assert "blindspot-mobile-audit" in skill_names
+    assert "persona-elderly-user" in skill_names
+    assert "persona-motor-impaired" in skill_names
 
-    get_res = tool_get_skill("ecommerce")
-    assert get_res["name"] == "blindspot-ecommerce-audit"
-    assert "Funnel Stage Analysis" in get_res["body"]
+    get_res = tool_get_skill("elderly")
+    assert get_res["name"] == "persona-elderly-user"
+    assert "Arthur" in get_res["body"]
 
     bad_res = tool_get_skill("unknown-xyz")
     assert "error" in bad_res
@@ -305,17 +306,16 @@ def test_build_agent_system_prompt_with_skill():
     base_prompt = build_agent_system_prompt()
     assert "PERCEPTION & INTERACTION" in base_prompt
     assert "CRITICAL SAFETY & INTEGRITY RULES" in base_prompt
-    assert "SPECIALIZED AUDIT PLAYBOOK" in base_prompt  # loads default blindspot-ux-audit
 
-    # Specialized ecommerce skill injection
-    ecommerce_prompt = build_agent_system_prompt(skill="ecommerce")
-    assert "PERCEPTION & INTERACTION" in ecommerce_prompt
-    assert "blindspot-ecommerce-audit" in ecommerce_prompt
+    # Specialized elderly skill injection
+    elderly_prompt = build_agent_system_prompt(skill="elderly")
+    assert "PERCEPTION & INTERACTION" in elderly_prompt
+    assert "persona-elderly-user" in elderly_prompt
 
-    # Specialized mobile skill injection
-    mobile_prompt = build_agent_system_prompt(skill="mobile")
-    assert "PERCEPTION & INTERACTION" in mobile_prompt
-    assert "blindspot-mobile-audit" in mobile_prompt
+    # Specialized motor skill injection
+    motor_prompt = build_agent_system_prompt(skill="motor")
+    assert "PERCEPTION & INTERACTION" in motor_prompt
+    assert "persona-motor-impaired" in motor_prompt
 
 
 def test_build_analysis_system_prompt_with_skill():
@@ -325,7 +325,7 @@ def test_build_analysis_system_prompt_with_skill():
     base_prompt = build_analysis_system_prompt()
     assert "RULES FOR UX ANALYSIS" in base_prompt
 
-    mobile_prompt = build_analysis_system_prompt(skill="mobile")
-    assert "RULES FOR UX ANALYSIS" in mobile_prompt
-    assert "blindspot-mobile-audit" in mobile_prompt
+    motor_prompt = build_analysis_system_prompt(skill="motor")
+    assert "RULES FOR UX ANALYSIS" in motor_prompt
+    assert "persona-motor-impaired" in motor_prompt
 

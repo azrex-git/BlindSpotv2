@@ -74,7 +74,7 @@ def build_system_prompt() -> str:
     try:
         from blindspot.skills.registry import SkillRegistry
         reg = SkillRegistry()
-        sk = reg.get_skill("blindspot-persona-designer")
+        sk = reg.get_skill("persona-elderly-user")
         if sk and sk.body:
             skill_guidance = f"\n\nSPECIALIZED PERSONA DESIGN PRINCIPLES:\n{sk.body}"
     except Exception:

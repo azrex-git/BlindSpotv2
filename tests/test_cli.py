@@ -512,7 +512,7 @@ def test_inspect_with_skill_flag(tmp_path: Path):
     )
     assert result.exit_code == 0
     assert "Activated Agent Skill" in result.stdout
-    assert "blindspot-wcag-audit" in result.stdout
+    assert "persona-motor-impaired" in result.stdout
 
 
 
