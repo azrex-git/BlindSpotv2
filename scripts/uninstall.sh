@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-command macOS/Linux uninstaller. Configuration is kept unless requested.
-# curl -fsSL https://raw.githubusercontent.com/harshit-dev-on/blind-spot/main/scripts/uninstall.sh | bash
+# curl -fsSL https://raw.githubusercontent.com/azrex-git/BlindSpotv2/main/scripts/uninstall.sh | bash
 
 set -euo pipefail
 

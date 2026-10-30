@@ -1,5 +1,5 @@
 # One-command Windows uninstaller. Configuration is kept unless -CleanConfig is supplied.
-# irm https://raw.githubusercontent.com/harshit-dev-on/blind-spot/main/scripts/uninstall.ps1 | iex
+# irm https://raw.githubusercontent.com/azrex-git/BlindSpotv2/main/scripts/uninstall.ps1 | iex
 param([switch]$CleanConfig)
 
 $ErrorActionPreference = "Stop"

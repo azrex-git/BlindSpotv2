@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/harshit-dev-on/blind-spot">
+  <a href="https://github.com/azrex-git/BlindSpotv2">
     <img src="src/blindspot/web/static/blindspot-logo.svg" alt="BlindSpot1 Logo" width="160">
   </a>
 </p>
@@ -13,17 +13,17 @@
 <br/>
 
 <a href="docs/TECHNICAL_SPECIFICATION.md"><img src="https://img.shields.io/badge/Docs-Technical%20Spec-2b9246?style=for-the-badge&logo=gitbook&logoColor=white" alt="Docs"></a>
-<a href="https://github.com/harshit-dev-on/blind-spot"><img src="https://img.shields.io/badge/Repository-blind--spot-f0f0f0?style=for-the-badge&logo=github&logoColor=000000" alt="GitHub Repo"></a>
-<a href="https://github.com/harshit-dev-on/blind-spot/discussions"><img src="https://img.shields.io/badge/Community-Discussions-blue?style=for-the-badge&logo=github&logoColor=white" alt="Community"></a>
+<a href="https://github.com/azrex-git/BlindSpotv2"><img src="https://img.shields.io/badge/Repository-BlindSpotv2-f0f0f0?style=for-the-badge&logo=github&logoColor=000000" alt="GitHub Repo"></a>
+<a href="https://github.com/azrex-git/BlindSpotv2/discussions"><img src="https://img.shields.io/badge/Community-Discussions-blue?style=for-the-badge&logo=github&logoColor=white" alt="Community"></a>
 
 <a href="#-antigravity-native--zero-external-api-keys"><img src="https://img.shields.io/badge/Antigravity%20Native-Zero%20API%20Keys-success?style=for-the-badge&logoColor=white" alt="Antigravity Native"></a>
 <a href="#-screenshot-first-visual-perception"><img src="https://img.shields.io/badge/Screenshot--First-Visual%20Perception-7c3aed?style=for-the-badge&logoColor=white" alt="Screenshot First"></a>
 <a href="#-zero-docker-requirement"><img src="https://img.shields.io/badge/Zero%20Docker-Native%20Playwright-3b82f6?style=for-the-badge&logoColor=white" alt="Zero Docker"></a>
 
-<a href="https://github.com/harshit-dev-on/blind-spot"><img src="https://img.shields.io/github/stars/harshit-dev-on/blind-spot?style=flat-square" alt="GitHub Stars"></a>
+<a href="https://github.com/azrex-git/BlindSpotv2"><img src="https://img.shields.io/github/stars/azrex-git/BlindSpotv2?style=flat-square" alt="GitHub Stars"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-3b82f6?style=flat-square" alt="License"></a>
 <a href="https://pypi.org/project/blindspot1/"><img src="https://img.shields.io/badge/PyPI-blindspot1-orange?style=flat-square" alt="PyPI Package"></a>
-<a href="https://github.com/harshit-dev-on/blind-spot/actions"><img src="https://img.shields.io/badge/tests-run%20locally-informational?style=flat-square" alt="Tests"></a>
+<a href="https://github.com/azrex-git/BlindSpotv2/actions"><img src="https://img.shields.io/badge/tests-run%20locally-informational?style=flat-square" alt="Tests"></a>
 
 </div>
 
@@ -113,13 +113,13 @@ The GitHub repository must be public for these anonymous installer commands to d
 **Windows PowerShell:**
 
 ```powershell
-irm https://raw.githubusercontent.com/harshit-dev-on/blind-spot/master/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/azrex-git/BlindSpotv2/master/scripts/install.ps1 | iex
 ```
 
 **macOS or Linux:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/harshit-dev-on/blind-spot/master/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/azrex-git/BlindSpotv2/master/scripts/install.sh | bash
 ```
 
 The setup wizard defaults to Antigravity local mode, which needs no cloud API key. To change providers later, run `blindspot1 setup`. The wizard saves your configuration under `~/.blindspot/` and can configure a local Ollama model or a hosted provider.
@@ -144,11 +144,11 @@ For development from a source checkout, use the contributor instructions in [`de
 Run the same one-line installer again to upgrade BlindSpot. Your saved configuration is kept:
 
 ```powershell
-irm https://raw.githubusercontent.com/harshit-dev-on/blind-spot/master/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/azrex-git/BlindSpotv2/master/scripts/install.ps1 | iex
 ```
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/harshit-dev-on/blind-spot/master/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/azrex-git/BlindSpotv2/master/scripts/install.sh | bash
 ```
 
 ---
@@ -160,22 +160,22 @@ Use one command to remove BlindSpot and its managed Python environment. The defa
 **Windows PowerShell:**
 
 ```powershell
-irm https://raw.githubusercontent.com/harshit-dev-on/blind-spot/main/scripts/uninstall.ps1 | iex
+irm https://raw.githubusercontent.com/azrex-git/BlindSpotv2/main/scripts/uninstall.ps1 | iex
 ```
 
 To remove configuration too:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/harshit-dev-on/blind-spot/main/scripts/uninstall.ps1))) -CleanConfig
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/azrex-git/BlindSpotv2/main/scripts/uninstall.ps1))) -CleanConfig
 ```
 
 **macOS or Linux:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/harshit-dev-on/blind-spot/main/scripts/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/azrex-git/BlindSpotv2/main/scripts/uninstall.sh | bash
 ```
 
-To remove configuration too, use `curl -fsSL https://raw.githubusercontent.com/harshit-dev-on/blind-spot/main/scripts/uninstall.sh | bash -s -- --clean-config`.
+To remove configuration too, use `curl -fsSL https://raw.githubusercontent.com/azrex-git/BlindSpotv2/main/scripts/uninstall.sh | bash -s -- --clean-config`.
 
 ---
 
@@ -336,7 +336,7 @@ If `blindspot1` is not installed globally on your machine, you can run the MCP s
   "mcpServers": {
     "blindspot1": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/harshit-dev-on/blind-spot.git", "blindspot1", "mcp"]
+      "args": ["--from", "git+https://github.com/azrex-git/BlindSpotv2.git", "blindspot1", "mcp"]
     }
   }
 }
@@ -417,7 +417,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install BlindSpot1
-        run: pip install git+https://github.com/harshit-dev-on/blind-spot.git
+        run: pip install git+https://github.com/azrex-git/BlindSpotv2.git
 
       - name: Install Playwright Browsers
         run: playwright install chromium
@@ -468,12 +468,12 @@ Full architectural documentation, data models, Nielsen heuristic mappings, and W
 
 ## Contributing
 
-We welcome contributions of code, heuristics, test personas, and new agent skills! Check out our [Contributing Guidelines](CONTRIBUTING.md) or open an [Issue](https://github.com/harshit-dev-on/blind-spot/issues) or [Pull Request](https://github.com/harshit-dev-on/blind-spot/pulls).
+We welcome contributions of code, heuristics, test personas, and new agent skills! Check out our [Contributing Guidelines](CONTRIBUTING.md) or open an [Issue](https://github.com/azrex-git/BlindSpotv2/issues) or [Pull Request](https://github.com/azrex-git/BlindSpotv2/pulls).
 
 ## Join Our Community
 
 Have questions? Found a usability bug? Want to discuss autonomous testing agents?
-**[Join our GitHub Discussions!](https://github.com/harshit-dev-on/blind-spot/discussions)**
+**[Join our GitHub Discussions!](https://github.com/azrex-git/BlindSpotv2/discussions)**
 
 ## Support the Project
 

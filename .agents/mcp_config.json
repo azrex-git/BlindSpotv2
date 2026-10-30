@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "blindspot": {
-      "command": "d:/Projects/blind-spot/.venv/Scripts/python.exe",
+      "command": "python",
       "args": [
         "-m",
         "blindspot.mcp.server"

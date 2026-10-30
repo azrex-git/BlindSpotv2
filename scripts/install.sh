@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-command macOS/Linux installer. Supports running from GitHub or a local checkout.
-# curl -fsSL https://raw.githubusercontent.com/harshit-dev-on/blind-spot/master/scripts/install.sh | bash
+# curl -fsSL https://raw.githubusercontent.com/azrex-git/BlindSpotv2/master/scripts/install.sh | bash
 
 set -euo pipefail
 
@@ -43,7 +43,7 @@ fi
 if [[ -n "$REPO_ROOT" ]]; then
     run_step "Installing BlindSpot and its Python dependencies" "$UV_BIN" pip install --python "$VENV_PYTHON" --upgrade --editable "$REPO_ROOT"
 else
-    run_step "Installing BlindSpot and its Python dependencies" "$UV_BIN" pip install --python "$VENV_PYTHON" --upgrade "https://github.com/harshit-dev-on/blind-spot/archive/refs/heads/master.zip"
+    run_step "Installing BlindSpot and its Python dependencies" "$UV_BIN" pip install --python "$VENV_PYTHON" --upgrade "https://github.com/azrex-git/BlindSpotv2/archive/refs/heads/master.zip"
 fi
 
 if [[ "$(uname -s)" == Linux* ]]; then

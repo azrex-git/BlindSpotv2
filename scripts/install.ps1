@@ -1,5 +1,5 @@
 # One-command Windows installer. Supports running from GitHub or from a local checkout.
-# irm https://raw.githubusercontent.com/harshit-dev-on/blind-spot/master/scripts/install.ps1 | iex
+# irm https://raw.githubusercontent.com/azrex-git/BlindSpotv2/master/scripts/install.ps1 | iex
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
@@ -47,7 +47,7 @@ Write-Host "Installing BlindSpot and its Python dependencies..." -ForegroundColo
 if ($RepoRoot) {
     Invoke-Uv pip install --python $VenvPython --upgrade --editable $RepoRoot
 } else {
-    Invoke-Uv pip install --python $VenvPython --upgrade "https://github.com/harshit-dev-on/blind-spot/archive/refs/heads/master.zip"
+    Invoke-Uv pip install --python $VenvPython --upgrade "https://github.com/azrex-git/BlindSpotv2/archive/refs/heads/master.zip"
 }
 
 Write-Host "Installing the Chromium browser..." -ForegroundColor Cyan

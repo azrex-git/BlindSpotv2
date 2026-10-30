@@ -148,12 +148,12 @@ BlindSpot installs natively with **no Docker requirement**. The one-line install
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/harshit-dev-on/blind-spot/master/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/azrex-git/BlindSpotv2/master/scripts/install.ps1 | iex
 ```
 
 **Linux / macOS (Bash / Zsh):**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/harshit-dev-on/blind-spot/master/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/azrex-git/BlindSpotv2/master/scripts/install.sh | bash
 ```
 
 The installer downloads a source archive directly, creates `~/.blindspot/venv-py312`, configures CLI shims under `~/.blindspot/bin`, adds that directory to your user `PATH`, and leaves other Python environments untouched. The default Antigravity setup needs no cloud credentials.
