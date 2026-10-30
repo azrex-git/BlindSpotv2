@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "blindspot1"
+version = "0.1.0"
+description = "AI-powered website UX testing tool"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "BlindSpot1 Team" }
+]
+keywords = ["ux-testing", "ai", "browser-automation", "playwright", "usability"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Testing",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "typer>=0.12.0",
+    "rich>=13.0.0",
+    "pydantic>=2.0.0",
+    "playwright>=1.40.0",
+    "httpx>=0.27.0",
+    "PyYAML>=6.0.1",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "mcp>=1.0.0",
+    "litellm>=1.40.0",
+    "tomli>=2.0.1; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
+browser-use = [
+    "browser-use>=0.13.0; python_version >= '3.11'",
+    "litellm>=1.40.0",
+]
+
+[project.scripts]
+blindspot1 = "blindspot.cli:main_entry"
+blindspot = "blindspot.cli:main_entry"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/blindspot", "src/blindspot1"]
+include = ["src/blindspot/skills/**/*.md", "src/blindspot/web/static/*", "src/blindspot/knowledge/**/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

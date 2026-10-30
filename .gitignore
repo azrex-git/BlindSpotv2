@@ -1,0 +1,27 @@
+# Python environments and generated caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Local application state and generated audit runs
+/.blindspot/
+/reports/*
+!/reports/README.md
+
+# Local clone used for optional browser automation development
+/browser-use/
+/strix/
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
