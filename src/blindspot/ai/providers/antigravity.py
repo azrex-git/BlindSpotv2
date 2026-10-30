@@ -314,7 +314,7 @@ class AntigravityProvider(BaseAIProvider):
             )
 
         # 2. Extract requested number of personas (defaults to 1, max 5)
-        num_match = re.search(r"Generate exactly (\d+) diverse user personas", prompt)
+        num_match = re.search(r"Generate exactly (\d+)", prompt)
         num_requested = int(num_match.group(1)) if num_match else 1
         num_requested = max(1, min(5, num_requested))
 
