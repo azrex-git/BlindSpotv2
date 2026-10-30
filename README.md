@@ -113,13 +113,13 @@ The GitHub repository must be public for these anonymous installer commands to d
 **Windows PowerShell:**
 
 ```powershell
-irm https://raw.githubusercontent.com/azrex-git/BlindSpotv2/master/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/azrex-git/BlindSpotv2/main/scripts/install.ps1 | iex
 ```
 
 **macOS or Linux:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/azrex-git/BlindSpotv2/master/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/azrex-git/BlindSpotv2/main/scripts/install.sh | bash
 ```
 
 The setup wizard defaults to Antigravity local mode, which needs no cloud API key. To change providers later, run `blindspot1 setup`. The wizard saves your configuration under `~/.blindspot/` and can configure a local Ollama model or a hosted provider.
@@ -144,11 +144,11 @@ For development from a source checkout, use the contributor instructions in [`de
 Run the same one-line installer again to upgrade BlindSpot. Your saved configuration is kept:
 
 ```powershell
-irm https://raw.githubusercontent.com/azrex-git/BlindSpotv2/master/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/azrex-git/BlindSpotv2/main/scripts/install.ps1 | iex
 ```
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/azrex-git/BlindSpotv2/master/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/azrex-git/BlindSpotv2/main/scripts/install.sh | bash
 ```
 
 ---
