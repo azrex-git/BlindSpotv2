@@ -313,116 +313,248 @@ class AntigravityProvider(BaseAIProvider):
                 personas=custom_personas,
             )
 
+        # 2. Extract requested number of personas (defaults to 1, max 5)
+        num_match = re.search(r"Generate exactly (\d+) diverse user personas", prompt)
+        num_requested = int(num_match.group(1)) if num_match else 1
+        num_requested = max(1, min(5, num_requested))
+
         # Extract target context or instruction
         context_match = re.search(r'WEBSITE INTENDED CONTEXT & AUDIENCE:\s*"([^"]+)"', prompt)
-        instruction = context_match.group(1).strip() if context_match else "Website usability audit"
+        instruction = context_match.group(1).strip() if context_match else "Website usability and accessibility audit"
 
         # Check for specific intent (e.g. search, buy, order, navigate)
         is_order_intent = any(w in instruction.lower() for w in ("order", "buy", "cart", "iphone", "checkout", "purchase"))
         is_iphone = "iphone" in instruction.lower()
+        target_product = "Apple iPhone 16" if is_iphone else "product"
 
-        if is_order_intent:
-            target_product = "Apple iPhone 16" if is_iphone else "product"
-            personas = [
-                Persona(
-                    id="persona_elena_elderly",
-                    name="Elena - Senior User (Low Vision & Novice Tech)",
-                    description=f"Senior citizen (age 70+) searching for {target_product}, cautious browsing pace, evaluating visual readability, text contrast, button affordances, and navigating the purchasing funnel.",
-                    experience_level="Novice",
-                    goals=[
-                        f"Find {target_product} using high-contrast search controls",
-                        "Read specifications and price without eye strain (min 16px font and WCAG AA 4.5:1 contrast)",
-                        "Locate prominent 'Add to Cart' button with clear click affordance",
-                        "Inspect Shopping Cart and checkout progression without confusion",
-                    ],
-                    likely_difficulties=[
-                        "Faint grey text on white backgrounds (<4.5:1 contrast)",
-                        "Tiny font sizes (<16px)",
-                        "Flat buttons lacking visible borders or clear click affordances",
-                        "Disorienting auto-rotating carousels and unexpected modal popups",
-                        "Cluttered layouts and absence of clear back navigation",
-                    ],
-                    accessibility_needs="Low-Vision / High-Contrast & Zoom (Cannot see small text <16px or low contrast differences; requires minimum 4.5:1 contrast, >= 16px fonts, and large click targets)",
-                    tasks=[
-                        PersonaTask(
-                            id="task_search_and_discover",
-                            objective=f"Locate the search bar using high-contrast input, search for '{target_product}', and browse result listings with legible text and prices.",
-                            starting_conditions="Starts on homepage",
-                            success_criteria=[f"Search query '{target_product}' submitted", "Product search results displayed with legible titles and prices"],
-                            evidence_to_collect=["Search input value", "Results heading text", "Top product titles and price contrast"],
-                            is_verified=True,
-                        ),
-                        PersonaTask(
-                            id="task_pdp_inspect_and_cart",
-                            objective=f"Open the top '{target_product}' item in active tab, inspect readable specifications and price contrast, verify prominent button affordance, and add to cart.",
-                            starting_conditions="Starts on search results listing page",
-                            success_criteria=["Product details page opened in active tab", "Product specifications and variant inspected", "Add to Cart or Buy Now clicked"],
-                            evidence_to_collect=["Product details heading", "Variant selection", "Cart action confirmation"],
-                            is_verified=True,
-                        ),
-                        PersonaTask(
-                            id="task_cart_and_checkout_funnel",
-                            objective="Navigate to the Cart, verify readable item details, quantity, delivery fee, and proceed to checkout without confusion.",
-                            starting_conditions="Starts on product details page or cart drawer",
-                            success_criteria=["Cart page opened and verified", "Cart total and items reviewed", "Proceed to checkout or authentication flow reached"],
-                            evidence_to_collect=["Cart total price", "Checkout URL", "Authentication barrier"],
-                            is_verified=True,
-                        ),
-                    ],
+        # The 5 standard authentic personas
+        all_available_personas = [
+            Persona(
+                id="persona_arthur_elderly",
+                name="Arthur - Elderly Senior User (Age 72)",
+                description=f"Senior citizen (age 72) browsing with 125% OS scaling. Evaluates visual legibility, text contrast (WCAG AA 4.5:1), button touch boundaries (>=44px), and persistent navigation.",
+                experience_level="Novice",
+                goals=[
+                    "Read all headlines, prices, and copy comfortably without eye strain (min 16px font and WCAG AA 4.5:1 contrast)",
+                    "Locate and activate large, prominent action buttons (min 44x44px) without tremor misclicks",
+                    "Navigate through menus and modals without disappearing hover flyouts or hidden close controls",
+                ],
+                likely_difficulties=[
+                    "Faint grey text on white backgrounds (<4.5:1 contrast)",
+                    "Tiny font sizes (<16px)",
+                    "Touch/click targets smaller than 44x44px",
+                    "Hover-triggered menus that vanish when cursor slips",
+                    "Unprompted modal overlays with tiny, low-contrast 'x' icons",
+                ],
+                accessibility_needs="Low-Vision / High-Contrast & Zoom (Cannot see small text <16px or low contrast differences; requires minimum 4.5:1 contrast, >= 16px fonts, and large click targets)",
+                tasks=[
+                    PersonaTask(
+                        id="task_arthur_text_readability",
+                        objective="Read main headlines, navigation menus, and content to verify text is comfortably readable without squinting (minimum 16px font and WCAG AA 4.5:1 contrast).",
+                        starting_conditions="Starts on target page",
+                        success_criteria=["Main headlines and navigation labels have sufficient contrast against background", "Font sizes are at least 16px", "Text is not faint or clipped"],
+                        evidence_to_collect=["Computed font sizes", "Text color vs background color", "Clipped or overflowing text containers"],
+                        is_verified=True,
+                    ),
+                    PersonaTask(
+                        id="task_arthur_button_affordance",
+                        objective="Find primary action buttons (e.g. 'Get Started', 'Learn More', 'Shop Now') and verify they have obvious button affordance and distinct high contrast.",
+                        starting_conditions="Starts on target page",
+                        success_criteria=["Primary button has distinct background color, clear borders, legible high-contrast label", "Does not blend invisibly into background"],
+                        evidence_to_collect=["Button computed styles (background-color, padding, border)", "Bounding box dimensions", "Visibility state"],
+                        is_verified=True,
+                    ),
+                    PersonaTask(
+                        id="task_arthur_navigation_journey",
+                        objective="Explore primary navigation links or search, proceed through core website sections, and verify obvious back controls without confusing popups or disorienting carousels.",
+                        starting_conditions="Starts on homepage",
+                        success_criteria=["Navigation progresses cleanly with legible headings and obvious breadcrumbs", "No jarring layout shifts or disorienting popups block the screen"],
+                        evidence_to_collect=["Back link or logo availability", "Page title clarity", "Presence of intrusive blocking overlays"],
+                        is_verified=True,
+                    ),
+                ],
+            ),
+            Persona(
+                id="persona_brenda_tech_novice",
+                name="Brenda - Tech Novice User (Age 54)",
+                description="Administrative assistant with low digital literacy and computer anxiety. Audits websites for technical jargon, unlabelled icons, cryptic errors, and unguided forms.",
+                experience_level="Novice",
+                goals=[
+                    "Understand all form instructions and buttons in plain, non-technical language",
+                    "Navigate using visible text labels rather than abstract icon-only buttons",
+                    "Complete workflows without anxiety or fear of irreversible mistakes",
+                ],
+                likely_difficulties=[
+                    "Technical jargon in alerts ('404', 'Regex', 'Payload Exception', 'Auth Token')",
+                    "Unlabelled icons (hamburger menus, filter funnels, gear icons without text)",
+                    "Multi-step forms without progress bars or step indicators",
+                    "Silent form submission failures that don't highlight the missing field",
+                ],
+                accessibility_needs="Plain-Language Microcopy & Guided UI (Requires clear visual step progress, visible text on all buttons, and inline recovery advice)",
+                tasks=[
+                    PersonaTask(
+                        id="task_brenda_plain_language",
+                        objective="Examine buttons, labels, and error states to ensure terminology is completely free of developer jargon.",
+                        starting_conditions="Starts on primary page",
+                        success_criteria=["All buttons and instructions use plain conversational language", "No technical error codes appear"],
+                        evidence_to_collect=["Button text labels", "Error banner wording", "Help text"],
+                        is_verified=True,
+                    ),
+                    PersonaTask(
+                        id="task_brenda_navigation_clarity",
+                        objective="Locate and open main navigation to verify that essential menus and actions provide visible text labels alongside icons.",
+                        starting_conditions="Starts on homepage",
+                        success_criteria=["Navigation links feature explicit text descriptions", "No essential feature is hidden behind an unlabelled icon"],
+                        evidence_to_collect=["Menu toggle selector", "Visible text labels", "Aria labels"],
+                        is_verified=True,
+                    ),
+                ],
+            ),
+            Persona(
+                id="persona_marcus_motor_impaired",
+                name="Marcus - Motor Impaired Keyboard User (Age 38)",
+                description="Former designer with essential tremors and spinal injury. Navigates exclusively via keyboard and assistive switch controls; audits focus rings, tab order, and keyboard traps.",
+                experience_level="Intermediate",
+                goals=[
+                    "Traverse entire user journeys using Tab, Enter, Space, and Escape without touching a mouse",
+                    "See an obvious, high-contrast visual focus ring on every active interactive element",
+                    "Dismiss dialogs and overlays easily using the Escape key",
+                ],
+                likely_difficulties=[
+                    "Missing focus rings (outline: none)",
+                    "Keyboard focus trapped inside modals or leaking into background pages",
+                    "Missing 'Skip to main content' link requiring 50+ Tab presses",
+                    "Crammed interactive elements (<24px or <8px spacing) causing accidental activation",
+                ],
+                accessibility_needs="Keyboard-Only Accessibility (WCAG 2.1.1, 2.1.2 No Keyboard Trap, 2.4.7 Focus Visible, 2.5.8 Target Size)",
+                tasks=[
+                    PersonaTask(
+                        id="task_marcus_focus_visibility",
+                        objective="Tab through interactive header and content elements to verify that every focused link, button, and input displays a visible high-contrast focus indicator.",
+                        starting_conditions="Starts at top of document with keyboard focus",
+                        success_criteria=["Active focused element displays a distinct high-contrast outline", "No interactive control has outline: none without fallback"],
+                        evidence_to_collect=["Active element tag", "Computed outline styles", "Focus ring contrast"],
+                        is_verified=True,
+                    ),
+                    PersonaTask(
+                        id="task_marcus_modal_trap_test",
+                        objective="Trigger any modal or dropdown dialog and verify that keyboard focus is constrained inside and can be closed via Escape key.",
+                        starting_conditions="Starts on page with modal or overlay trigger",
+                        success_criteria=["Modal traps Tab cycling inside its boundary", "Pressing Escape closes overlay and restores focus"],
+                        evidence_to_collect=["Focused element inside modal", "Escape key listener presence"],
+                        is_verified=True,
+                    ),
+                ],
+            ),
+            Persona(
+                id="persona_devin_color_blind",
+                name="Devin - Color Blind User (Age 29)",
+                description="Developer with moderate Deuteranopia (red-green blindness). Audits whether state, errors, links, and charts are distinguishable without relying on color hue.",
+                experience_level="Advanced",
+                goals=[
+                    "Identify form validation errors and alerts through icons and text rather than red borders alone",
+                    "Distinguish status badges (in-stock, active, failed) without relying on green vs red dots",
+                    "Locate hyperlinks within body copy via underlines or non-color visual markers",
+                ],
+                likely_difficulties=[
+                    "Form error states indicated solely by changing input border to red without an error message",
+                    "Status badges using colored dots with no accompanying text label",
+                    "Links in paragraphs styled with blue/red text but no underline",
+                    "Charts with legends differentiated solely by color swatches",
+                ],
+                accessibility_needs="WCAG 1.4.1 (Non-Color Indicators), WCAG 1.4.3 (4.5:1 Text Contrast Minimum), Underlined Links",
+                tasks=[
+                    PersonaTask(
+                        id="task_devin_form_error_cues",
+                        objective="Inspect form validation to verify that errors are communicated with explicit text and icons, not just red border color.",
+                        starting_conditions="Starts on interactive form",
+                        success_criteria=["Error state is conveyed with text and an icon", "Does not rely solely on color hue change"],
+                        evidence_to_collect=["Error feedback markup", "Border color hex", "Error icon presence"],
+                        is_verified=True,
+                    ),
+                    PersonaTask(
+                        id="task_devin_link_underline_test",
+                        objective="Examine body text paragraphs to ensure embedded links have underlines or distinct non-color visual indicators.",
+                        starting_conditions="Starts on content-rich page",
+                        success_criteria=["In-body links possess text-decoration: underline or distinct non-color styling"],
+                        evidence_to_collect=["Link computed text-decoration", "Computed color contrast against body text"],
+                        is_verified=True,
+                    ),
+                ],
+            ),
+            Persona(
+                id="persona_claire_light_sensitive",
+                name="Claire - Light Sensitive User (Age 42)",
+                description="Copywriter with photophobia and vestibular migraines. Audits websites for glaring white backgrounds, dark theme availability, and unpausable auto-play motion.",
+                experience_level="Intermediate",
+                goals=[
+                    "Browse without eye pain by utilizing dark mode or warm theme options",
+                    "Immediately pause any auto-playing video or moving carousel",
+                    "Experience static layouts that honor OS prefers-reduced-motion settings",
+                ],
+                likely_difficulties=[
+                    "Glaring monolithic #FFFFFF backgrounds with no dark mode toggle",
+                    "Auto-playing hero videos or carousels lacking a prominent Pause button",
+                    "Parallax scrolling or 3D animations triggering motion vertigo",
+                    "Sudden white flashes during page navigation or theme changes",
+                ],
+                accessibility_needs="WCAG 2.2.2 (Pause/Stop for Auto-Play Media), WCAG 2.3.3 (Prefers-Reduced-Motion), Dark Theme Support",
+                tasks=[
+                    PersonaTask(
+                        id="task_claire_glare_and_dark_mode",
+                        objective="Scan page header and footer for a dark mode or theme switcher to reduce glaring white luminance.",
+                        starting_conditions="Starts on homepage with prefers-color-scheme: dark enabled",
+                        success_criteria=["Dark mode is automatically applied or an accessible theme toggle is provided"],
+                        evidence_to_collect=["Background color hex", "Theme toggle presence in DOM"],
+                        is_verified=True,
+                    ),
+                    PersonaTask(
+                        id="task_claire_autoplay_pause_control",
+                        objective="Check all videos, animations, and carousels to verify that an accessible Pause or Stop button is readily available.",
+                        starting_conditions="Starts on media-rich page",
+                        success_criteria=["Moving content has an accessible pause button or does not auto-play"],
+                        evidence_to_collect=["Video autoplay attribute", "Pause button selector"],
+                        is_verified=True,
+                    ),
+                ],
+            ),
+        ]
+
+        # Select the requested number of personas (up to 5)
+        selected_personas = all_available_personas[:num_requested]
+
+        # If specific order/buy intent was given, customize Arthur's tasks to that product
+        if is_order_intent and selected_personas:
+            selected_personas[0].tasks = [
+                PersonaTask(
+                    id="task_search_and_discover",
+                    objective=f"Locate the search bar using high-contrast input, search for '{target_product}', and browse result listings with legible text and prices.",
+                    starting_conditions="Starts on homepage",
+                    success_criteria=[f"Search query '{target_product}' submitted", "Product search results displayed with legible titles and prices"],
+                    evidence_to_collect=["Search input value", "Results heading text", "Top product titles and price contrast"],
+                    is_verified=True,
                 ),
-            ]
-        else:
-            personas = [
-                Persona(
-                    id="persona_elena_elderly",
-                    name="Elena - Senior User (Low Vision & Novice Tech)",
-                    description="Senior citizen (age 70+) exploring website features, evaluating visual readability, text contrast, button affordances, and navigating core features without confusion.",
-                    experience_level="Novice",
-                    goals=[
-                        "Easily read website text and headlines without eye strain (min 16px font and WCAG AA 4.5:1 contrast)",
-                        "Distinguish interactive buttons and call-to-actions from background content",
-                        "Navigate primary features without confusion, dead ends, or intrusive popups",
-                    ],
-                    likely_difficulties=[
-                        "Faint grey text on white backgrounds (<4.5:1 contrast)",
-                        "Tiny font sizes (<16px)",
-                        "Flat buttons lacking visible borders or clear click affordances",
-                        "Disorienting auto-rotating carousels and unexpected modal popups",
-                        "Cluttered layouts and absence of clear back navigation",
-                    ],
-                    accessibility_needs="Low-Vision / High-Contrast & Zoom (Cannot see small text <16px or low contrast differences; requires minimum 4.5:1 contrast, >= 16px fonts, and large click targets)",
-                    tasks=[
-                        PersonaTask(
-                            id="task_elena_text_readability",
-                            objective="Read main headlines, navigation menus, and content to verify text is comfortably readable without squinting (minimum 16px font and WCAG AA 4.5:1 contrast).",
-                            starting_conditions="Starts on target page",
-                            success_criteria=["Main headlines and navigation labels have sufficient contrast against background", "Font sizes are at least 16px", "Text is not faint or clipped"],
-                            evidence_to_collect=["Computed font sizes", "Text color vs background color", "Clipped or overflowing text containers"],
-                            is_verified=True,
-                        ),
-                        PersonaTask(
-                            id="task_elena_button_affordance",
-                            objective="Find primary action buttons (e.g. 'Get Started', 'Learn More', 'Shop Now') and verify they have obvious button affordance and distinct high contrast.",
-                            starting_conditions="Starts on target page",
-                            success_criteria=["Primary button has distinct background color, clear borders, legible high-contrast label", "Does not blend invisibly into background"],
-                            evidence_to_collect=["Button computed styles (background-color, padding, border)", "Bounding box dimensions", "Visibility state"],
-                            is_verified=True,
-                        ),
-                        PersonaTask(
-                            id="task_elena_navigation_journey",
-                            objective="Explore primary navigation links or search, proceed through core website sections, and verify obvious back controls without confusing popups or disorienting carousels.",
-                            starting_conditions="Starts on homepage",
-                            success_criteria=["Navigation progresses cleanly with legible headings and obvious breadcrumbs", "No jarring layout shifts or disorienting popups block the screen"],
-                            evidence_to_collect=["Back link or logo availability", "Page title clarity", "Presence of intrusive blocking overlays"],
-                            is_verified=True,
-                        ),
-                    ],
+                PersonaTask(
+                    id="task_pdp_inspect_and_cart",
+                    objective=f"Open the top '{target_product}' item in active tab, inspect readable specifications and price contrast, verify prominent button affordance, and add to cart.",
+                    starting_conditions="Starts on search results listing page",
+                    success_criteria=["Product details page opened in active tab", "Product specifications and variant inspected", "Add to Cart or Buy Now clicked"],
+                    evidence_to_collect=["Product details heading", "Variant selection", "Cart action confirmation"],
+                    is_verified=True,
+                ),
+                PersonaTask(
+                    id="task_cart_and_checkout_funnel",
+                    objective="Navigate to the Cart, verify readable item details, quantity, delivery fee, and proceed to checkout without confusion.",
+                    starting_conditions="Starts on product details page or cart drawer",
+                    success_criteria=["Cart page opened and verified", "Cart total and items reviewed", "Proceed to checkout or authentication flow reached"],
+                    evidence_to_collect=["Cart total price", "Checkout URL", "Authentication barrier"],
+                    is_verified=True,
                 ),
             ]
 
         payload = PersonaPlanPayload(
             website_summary=f"E-commerce & web portal evaluated for: {instruction}",
-            personas=personas,
+            personas=selected_personas,
         )
         return payload
 

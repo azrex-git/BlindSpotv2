@@ -171,7 +171,7 @@ def build_sarif_report(
                     "driver": {
                         "name": "BlindSpot",
                         "version": tool_version,
-                        "informationUri": "https://github.com/harshit-dev-on/BlindSpot",
+                        "informationUri": "https://github.com/azrex-git/BlindSpotv2",
                         "rules": list(rules_used.values()),
                     }
                 },

@@ -520,7 +520,7 @@ def print_report_summary(
     console.print(
         "[#60a5fa]blindspot.ai[/]  [dim]·[/]  "
         "[#60a5fa]docs.blindspot.ai[/]  [dim]·[/]  "
-        "[#60a5fa]github.com/harshit-dev-on/BlindSpot[/]\n"
+        "[#60a5fa]github.com/azrex-git/BlindSpotv2[/]\n"
     )
 
     if top_findings:

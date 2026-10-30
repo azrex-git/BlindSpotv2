@@ -238,20 +238,18 @@ def rank_persona_files(files: List[Path], context: str) -> List[Path]:
     ctx_lower = context.lower()
 
     keyword_maps = {
-        "e_commerce": ["shop", "store", "buy", "cart", "product", "checkout", "price", "retail", "item", "order"],
-        "marcus_skeptical": ["checkout", "payment", "card", "fishy", "trust", "ssl", "secure", "scam", "policy", "refund", "return"],
-        "elena_elderly": ["elderly", "senior", "contrast", "read", "font", "small", "text", "clear", "visible", "button", "confus"],
-        "chloe_impatient": ["mobile", "responsive", "touch", "speed", "fast", "popup", "banner", "tap", "young"],
-        "accessibility": ["accessib", "a11y", "wcag", "keyboard", "focus", "screen reader", "tab", "motor"],
-        "devon_tech": ["tech", "frontend", "code", "dev", "layout", "shift", "console", "error", "html", "api"],
-        "first_time": ["explore", "landing", "welcome", "first", "home", "about", "saas", "app", "visit"],
+        "arthur_elderly": ["elderly", "senior", "contrast", "read", "font", "small", "text", "clear", "visible", "button", "confus"],
+        "brenda_tech": ["novice", "beginner", "jargon", "confus", "form", "guidance", "simple", "step"],
+        "marcus_motor": ["motor", "keyboard", "focus", "switch", "tremor", "tab", "trap", "spacing"],
+        "devin_color": ["color", "blind", "contrast", "badge", "chart", "deuteranopia", "protanopia", "status"],
+        "claire_light": ["light", "sensitive", "glare", "dark", "photophobia", "motion", "animation", "video", "flash"],
     }
 
     def score(file_path: Path) -> int:
         pts = 0
         stem = file_path.stem.lower()
-        # Elena (Senior user with low vision & novice tech) is the primary baseline archetype
-        if "elena" in stem or "elderly" in stem:
+        # Arthur (Senior user with low vision & novice tech) is the primary baseline archetype
+        if "arthur" in stem or "elderly" in stem:
             pts += 50
         try:
             content = file_path.read_text(encoding="utf-8", errors="ignore").lower()
