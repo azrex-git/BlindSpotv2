@@ -6,7 +6,7 @@ prioritized usability/accessibility findings.
 """
 
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from blindspot.execution.models import ExecutionRunResult
 from blindspot.reporting.models import BlindSpotReport, FindingCategory, SeverityLevel, UXFinding

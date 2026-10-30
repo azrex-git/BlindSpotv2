@@ -1,59 +1,61 @@
-# Standalone PowerShell Uninstaller for BlindSpot1 / BlindSpot
-param(
-    [switch]$Force,
-    [switch]$CleanConfig
-)
+# One-command Windows uninstaller. Configuration is kept unless -CleanConfig is supplied.
+# irm https://raw.githubusercontent.com/harshit-dev-on/blind-spot/main/scripts/uninstall.ps1 | iex
+param([switch]$CleanConfig)
 
-Write-Host "● BlindSpot1 / BlindSpot System Cleanup" -ForegroundColor Cyan
+$ErrorActionPreference = "Stop"
+$BlindSpotHome = Join-Path $HOME ".blindspot"
+$InstallDir = Join-Path $BlindSpotHome "bin"
+$HomeFullPath = [System.IO.Path]::GetFullPath($HOME).TrimEnd('\')
+$BlindSpotHomeFullPath = [System.IO.Path]::GetFullPath($BlindSpotHome).TrimEnd('\')
 
-$shims = @(
-    "$HOME\.local\bin\blindspot1.cmd",
-    "$HOME\.local\bin\blindspot1.ps1",
-    "$HOME\.local\bin\blindspot.cmd",
-    "$HOME\.local\bin\blindspot.ps1",
-    "$HOME\.blindspot\bin\blindspot1.cmd",
-    "$HOME\.blindspot\bin\blindspot1.ps1",
-    "$HOME\.blindspot\bin\blindspot.cmd",
-    "$HOME\.blindspot\bin\blindspot.ps1",
-    "$HOME\AppData\Local\Python\bin\blindspot1.cmd",
-    "$HOME\AppData\Local\Python\bin\blindspot1.ps1",
-    "$HOME\AppData\Local\Python\bin\blindspot.cmd",
-    "$HOME\AppData\Local\Python\bin\blindspot.ps1"
-)
+if ($env:BLINDSPOT_CLEAN_CONFIG -eq "1") { $CleanConfig = $true }
 
-if (-not $Force) {
-    $confirm = Read-Host "Are you sure you want to remove BlindSpot1 command shims and packages? (y/N)"
-    if ($confirm -ne "y" -and $confirm -ne "yes") {
-        Write-Host "Uninstallation aborted." -ForegroundColor Yellow
-        exit 0
+if (-not $env:BLINDSPOT_UNINSTALL_FORCE) {
+    $answer = Read-Host "Remove BlindSpot and its managed Python environment? Configuration will be kept. (y/N)"
+    if ($answer -notin @("y", "yes")) {
+        Write-Host "Uninstallation cancelled." -ForegroundColor Yellow
+        return
     }
 }
 
-foreach ($s in $shims) {
-    if (Test-Path $s) {
-        Remove-Item $s -Force
-        Write-Host "  ✓ Removed: $s" -ForegroundColor Green
+foreach ($name in @("blindspot.cmd", "blindspot.ps1", "blindspot.bat", "blindspot.exe", "blindspot1.cmd", "blindspot1.ps1", "blindspot1.bat", "blindspot1.exe")) {
+    $shim = Join-Path $InstallDir $name
+    if (Test-Path -LiteralPath $shim) {
+        Remove-Item -LiteralPath $shim -Force
+        Write-Host "Removed $shim"
     }
 }
 
-# Uninstall pip and uv packages
-try {
-    if (Get-Command uv -ErrorAction SilentlyContinue) {
-        uv tool uninstall blindspot1 *>$null
+$userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+$userEntries = @($userPath -split ";" | Where-Object { $_ -and $_.TrimEnd('\') -ine $InstallDir.TrimEnd('\') })
+[Environment]::SetEnvironmentVariable("Path", ($userEntries -join ";"), "User")
+
+function Remove-BlindSpotManagedDirectory {
+    param([string]$Path, [string]$ExpectedParent, [string[]]$AllowedNames)
+    $fullPath = [System.IO.Path]::GetFullPath($Path).TrimEnd('\')
+    $fullParent = [System.IO.Path]::GetFullPath((Split-Path -Parent $fullPath)).TrimEnd('\')
+    $expected = [System.IO.Path]::GetFullPath($ExpectedParent).TrimEnd('\')
+    $leaf = Split-Path -Leaf $fullPath
+    if ($fullParent -ine $expected -or $leaf -notin $AllowedNames) {
+        throw "Refusing to remove unexpected path: $fullPath"
     }
-    py -m pip uninstall -y blindspot1 blindspot *>$null
-    python -m pip uninstall -y blindspot1 blindspot *>$null
-    Write-Host "  ✓ Package uninstalled from Python / uv" -ForegroundColor Green
-} catch {
-    Write-Host "  ! Python pip uninstall skipped" -ForegroundColor DarkGray
+    if (Test-Path -LiteralPath $fullPath) {
+        Remove-Item -LiteralPath $fullPath -Recurse -Force
+        Write-Host "Removed $fullPath"
+    }
 }
+
+Remove-BlindSpotManagedDirectory (Join-Path $BlindSpotHome "venv-py312") $BlindSpotHome @("venv-py312")
+Remove-BlindSpotManagedDirectory (Join-Path $BlindSpotHome "uv") $BlindSpotHome @("uv")
 
 if ($CleanConfig) {
-    $cfgPath = "$HOME\.blindspot"
-    if (Test-Path $cfgPath) {
-        Remove-Item $cfgPath -Recurse -Force
-        Write-Host "  ✓ Removed configuration directory $cfgPath" -ForegroundColor Green
-    }
+    Remove-BlindSpotManagedDirectory $BlindSpotHome $HOME @(".blindspot")
+} elseif ((Test-Path -LiteralPath $InstallDir) -and -not (Get-ChildItem -LiteralPath $InstallDir -Force | Select-Object -First 1)) {
+    Remove-Item -LiteralPath $InstallDir -Force
 }
 
-Write-Host "`n✓ Cleanup completed successfully." -ForegroundColor Green
+Write-Host "BlindSpot was removed. Open a new terminal to refresh PATH." -ForegroundColor Green
+if (-not $CleanConfig) {
+    Write-Host "Saved configuration and bridge data remain under $BlindSpotHome."
+    Write-Host "Run again with -CleanConfig to remove that data too."
+}

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import os
 from pathlib import Path
 import secrets
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Union
 
 from blindspot.ai import create_provider
 from blindspot.ai.base import BaseAIProvider

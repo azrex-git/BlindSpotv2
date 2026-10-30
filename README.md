@@ -155,46 +155,27 @@ curl -fsSL https://raw.githubusercontent.com/harshit-dev-on/blind-spot/master/sc
 
 ## 🗑️ Uninstallation & System Cleanup
 
-BlindSpot1 includes dedicated cleanup utilities to remove CLI executables, shims, packages, and configuration files completely.
+Use one command to remove BlindSpot and its managed Python environment. The default keeps your saved settings and bridge data; `--clean-config` also removes them.
 
-### 1. Built-in CLI Uninstaller Command
-
-```bash
-# Interactive uninstaller with confirmation prompt:
-blindspot1 uninstall
-
-# Unattended full uninstallation including configuration (~/.blindspot):
-blindspot1 uninstall -y --clean-config
-```
-
-### 2. Other Installation Methods
-
-If you installed BlindSpot through another Python package manager, use that manager to remove the package:
-
-```bash
-# If installed as a uv tool:
-uv tool uninstall blindspot1
-
-# If installed via pipx:
-pipx uninstall blindspot1
-
-# If installed via pip:
-pip uninstall -y blindspot1 blindspot
-```
-
-### 3. Standalone Uninstaller Scripts
-
-If the command is not on your PATH, run the dedicated uninstaller scripts directly:
+**Windows PowerShell:**
 
 ```powershell
-# Windows PowerShell Standalone Uninstaller:
-.\scripts\uninstall.ps1 -Force -CleanConfig
+irm https://raw.githubusercontent.com/harshit-dev-on/blind-spot/main/scripts/uninstall.ps1 | iex
 ```
 
-```bash
-# Standalone Python Uninstaller:
-python scripts/uninstall.py --clean-config -y
+To remove configuration too:
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/harshit-dev-on/blind-spot/main/scripts/uninstall.ps1))) -CleanConfig
 ```
+
+**macOS or Linux:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/harshit-dev-on/blind-spot/main/scripts/uninstall.sh | bash
+```
+
+To remove configuration too, use `curl -fsSL https://raw.githubusercontent.com/harshit-dev-on/blind-spot/main/scripts/uninstall.sh | bash -s -- --clean-config`.
 
 ---
 

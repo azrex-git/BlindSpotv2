@@ -29,7 +29,7 @@ run_step() {
 }
 
 run_step "Installing Python 3.12" "$UV_BIN" python install 3.12
-run_step "Creating an isolated application environment" "$UV_BIN" venv --python 3.12 "$VENV_DIR"
+run_step "Creating an isolated application environment" "$UV_BIN" venv --clear --python 3.12 "$VENV_DIR"
 
 REPO_ROOT=""
 SCRIPT_SOURCE="${BASH_SOURCE[0]:-$0}"
@@ -41,7 +41,7 @@ if [[ -f "$SCRIPT_SOURCE" ]]; then
 fi
 
 if [[ -n "$REPO_ROOT" ]]; then
-    run_step "Installing BlindSpot and its Python dependencies" "$UV_BIN" pip install --python "$VENV_PYTHON" --upgrade -e "$REPO_ROOT"
+    run_step "Installing BlindSpot and its Python dependencies" "$UV_BIN" pip install --python "$VENV_PYTHON" --upgrade --editable "$REPO_ROOT"
 else
     run_step "Installing BlindSpot and its Python dependencies" "$UV_BIN" pip install --python "$VENV_PYTHON" --upgrade "https://github.com/harshit-dev-on/blind-spot/archive/refs/heads/master.zip"
 fi

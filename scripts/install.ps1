@@ -12,9 +12,9 @@ $UvInstallDir = Join-Path $BlindSpotHome "uv"
 
 New-Item -ItemType Directory -Force -Path $InstallDir, $BlindSpotHome | Out-Null
 
-$UvCommand = Get-Command uv -CommandType Application -ErrorAction SilentlyContinue
+$UvCommand = Get-Command uv -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($UvCommand) {
-    $Uv = $UvCommand.Source
+    $Uv = $UvCommand.Path
 } else {
     Write-Host "Installing the managed Python/package installer..." -ForegroundColor Cyan
     $env:UV_INSTALL_DIR = $UvInstallDir
@@ -36,7 +36,7 @@ function Invoke-Uv {
 
 Write-Host "Installing Python 3.12 and creating an isolated environment..." -ForegroundColor Cyan
 Invoke-Uv python install 3.12
-Invoke-Uv venv --python 3.12 $VenvDir
+Invoke-Uv venv --clear --python 3.12 $VenvDir
 
 $RepoRoot = $null
 if ($PSScriptRoot -and (Test-Path -LiteralPath (Join-Path $PSScriptRoot "..\pyproject.toml"))) {
@@ -45,7 +45,7 @@ if ($PSScriptRoot -and (Test-Path -LiteralPath (Join-Path $PSScriptRoot "..\pypr
 
 Write-Host "Installing BlindSpot and its Python dependencies..." -ForegroundColor Cyan
 if ($RepoRoot) {
-    Invoke-Uv pip install --python $VenvPython --upgrade -e $RepoRoot
+    Invoke-Uv pip install --python $VenvPython --upgrade --editable $RepoRoot
 } else {
     Invoke-Uv pip install --python $VenvPython --upgrade "https://github.com/harshit-dev-on/blind-spot/archive/refs/heads/master.zip"
 }
@@ -64,7 +64,7 @@ foreach ($CommandName in @("blindspot.cmd", "blindspot1.cmd")) {
 $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
 $PathEntries = @($UserPath -split ";" | Where-Object { $_ })
 if ($PathEntries -notcontains $InstallDir) {
-    $UpdatedPath = (@($PathEntries) + $InstallDir) -join ";"
+    $UpdatedPath = (@($InstallDir) + $PathEntries) -join ";"
     [Environment]::SetEnvironmentVariable("Path", $UpdatedPath, "User")
 }
 if (($env:Path -split ";") -notcontains $InstallDir) {
